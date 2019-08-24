@@ -1,12 +1,20 @@
+function displayMessage(message)
+	hs.notify.new({title=scriptName, informativeText=message}):send()
+end
+
+function getNumberOfScreens()
+	return #hs.screen.allScreens()
+end
+
 configFilePath = 'storedWindows.csv'
 scriptName = 'WindowKeeper'
 separator = ', '
 escapedSeparator = '; '
+nScreens = getNumberOfScreens()
+storeEverySeconds = 30
 
-function displayMessage(message)
-	hs.notify.new({title=scriptName, informativeText=message}):send()
-end
- 
+log = hs.logger.new(scriptName, 'info')
+
 function storeWindows()
 	filter = hs.window.filter.new():setDefaultFilter()
 	windows = filter:getWindows()
@@ -25,7 +33,7 @@ function storeWindows()
 		io.write(table.concat({v:id(), screen, title, x, y, w, h}, separator) .. '\n')
 	end
 	io.close(file)
-	displayMessage("Windows stored")
+	log.i("Windows stored")
 end
 
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "S", storeWindows)
@@ -38,7 +46,6 @@ function getLines(filename)
     return lines
 end
 
-log = hs.logger.new(scriptName)
 
 function getWindow(windows, id)
 	for i,window in ipairs(windows) do
@@ -81,10 +88,33 @@ function restoreWindows()
 		frame.h = h
 		window:setFrame(frame)
 		window:moveToScreen(screen)
-		log.w('window restored')
 		::continue::
 	end
 	displayMessage("Windows restored")
 end
 
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "R", restoreWindows)
+
+function screenCallback()
+	currentNumberOfScreens = getNumberOfScreens()
+	if nScreens < currentNumberOfScreens then
+		-- monitor(s) connected
+		restoreWindows()
+		storeTimer:start()
+	end
+
+	if nScreens > currentNumberOfScreens then
+		-- monitor(s) disconnected
+		-- already too late to store windows here
+		storeTimer:stop()
+	end
+
+	nScreens = currentNumberOfScreens
+	log.i("Screen change detected")
+end
+
+screenWatcher = hs.screen.watcher.new(screenCallback)
+screenWatcher:start()
+
+storeTimer = hs.timer.new(storeEverySeconds, storeWindows)
+storeTimer:start()
