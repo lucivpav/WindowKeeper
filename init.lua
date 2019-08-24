@@ -11,6 +11,9 @@ end)
 
 configFilePath = 'storedWindows.csv'
 scriptName = 'WindowKeeper'
+separator = ', '
+escapedSeparator = '; '
+
 function displayMessage(message)
 	hs.notify.new({title=scriptName, informativeText=message}):send()
 end
@@ -20,7 +23,7 @@ function storeWindows()
 	windows = filter:getWindows()
 	file = io.open(configFilePath, 'w')
 	io.output(file)
-	io.write('id, screen, title, x, y, w, h\n')
+	io.write(table.concat({'id', 'screen' ,'title', 'x', 'y', 'w', 'h'}, separator) .. '\n')
 	for k, v in pairs(windows) do
 		screen = v:screen():id()
 		topLeft = v:topLeft()
@@ -29,7 +32,8 @@ function storeWindows()
 		size = v:size()
 		w = size['w']
 		h = size['h']
-		io.write(table.concat({v:id(), screen, v:title(), x, y, w, h}, ', ') .. '\n')
+		title = v:title():gsub('%' .. separator, escapedSeparator)
+		io.write(table.concat({v:id(), screen, title, x, y, w, h}, separator) .. '\n')
 	end
 	io.close(file)
 	displayMessage("Windows stored")
