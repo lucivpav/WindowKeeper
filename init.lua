@@ -12,6 +12,7 @@ separator = ', '
 escapedSeparator = '; '
 nScreens = getNumberOfScreens()
 storeEverySeconds = 30
+automaticStoreRestore = true
 
 log = hs.logger.new(scriptName, 'info')
 
@@ -113,8 +114,10 @@ function screenCallback()
 	log.i("Screen change detected")
 end
 
-screenWatcher = hs.screen.watcher.new(screenCallback)
-screenWatcher:start()
+if automaticStoreRestore then
+	screenWatcher = hs.screen.watcher.new(screenCallback)
+	screenWatcher:start()
 
-storeTimer = hs.timer.new(storeEverySeconds, storeWindows)
-storeTimer:start()
+	storeTimer = hs.timer.new(storeEverySeconds, storeWindows)
+	storeTimer:start()
+end
