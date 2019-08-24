@@ -37,7 +37,12 @@ function storeWindows()
 	log.i("Windows stored")
 end
 
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "S", storeWindows)
+function manuallyStoreWindows()
+	storeWindows()
+	displayMessage("Windows stored")
+end
+
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "S", manuallyStoreWindows)
 
 function getLines(filename)
     local lines = {}
