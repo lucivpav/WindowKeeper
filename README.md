@@ -7,6 +7,3 @@ Remember position of windows when disconnecting and connecting to external monit
 
 ## Requirements
 * macOS
-
-## TODO
-* Spaces
