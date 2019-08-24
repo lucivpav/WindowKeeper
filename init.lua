@@ -1,3 +1,4 @@
+spaces = require("hs._asm.undocumented.spaces")
 function displayMessage(message)
 	hs.notify.new({title=scriptName, informativeText=message}):send()
 end
@@ -16,9 +17,35 @@ automaticStoreRestore = true
 
 log = hs.logger.new(scriptName, 'info')
 
+function getSpaceIds()
+	spacesLayout = spaces.layout()
+	spaceIdsTable = {}
+	for screen, spacesArray in pairs(spacesLayout) do
+		--log.i(#spacesArray)
+		for k, spaceId in pairs(spacesArray) do
+			--log.i(spaceId)
+			spaceIdsTable[spaceId] = true
+		end
+	end
+	spaceIdsList = {}
+	for spaceId, _ in pairs(spaceIdsTable) do
+		table.insert(spaceIdsList, spaceId)
+	end
+	return spaceIdsList
+end
+
+function getWindowsOnAllSpaces()
+	windows = {}
+	for _, spaceId in pairs(getSpaceIds()) do
+		for _, window in pairs(spaces.allWindowsForSpace(spaceId)) do
+			windows[#windows+1] = window
+		end
+	end
+	return windows
+end
+
 function storeWindows()
-	filter = hs.window.filter.new():setDefaultFilter()
-	windows = filter:getWindows()
+	windows = getWindowsOnAllSpaces()
 	file = io.open(configFilePath, 'w')
 	io.output(file)
 	io.write(table.concat({'id', 'screen' ,'title', 'x', 'y', 'w', 'h'}, separator) .. '\n')
@@ -31,6 +58,7 @@ function storeWindows()
 		w = size['w']
 		h = size['h']
 		title = v:title():gsub('%' .. separator, escapedSeparator)
+		title = v:title():gsub('%\n', '') -- remove newlines
 		io.write(table.concat({v:id(), screen, title, x, y, w, h}, separator) .. '\n')
 	end
 	io.close(file)
@@ -68,10 +96,10 @@ function restoreWindows()
 	for i = 2, #lines do
 		linesWithoutFirstLine[#linesWithoutFirstLine+1] = lines[i]
 	end
-	filter = hs.window.filter.new():setDefaultFilter()
-	windows = filter:getWindows()
+	windows = getWindowsOnAllSpaces()
  	for k, line in pairs(linesWithoutFirstLine) do
 		id, screenId, title, x, y, w, h = line:match("(.-), (.-), (.-), (.-), (.-), (.-), (%d+)")
+		log.i('parsed window id:' .. id)
 		id = tonumber(id)
 		screenId = tonumber(screenId)
 		x = tonumber(x)
@@ -80,11 +108,11 @@ function restoreWindows()
 		window = getWindow(windows, id)
 		screen = hs.screen.find(screenId)
 		if window == nil then
-			log.w('window is nil')
+			log.w('window is nil, id: ' .. id)
 			goto continue
 		end
 		if screen == nil then
-			log.w('screen is nil')
+			log.w('screen is nil, id: ' .. id)
 			goto continue
 		end
 		frame = window:frame()
