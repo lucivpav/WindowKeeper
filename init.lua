@@ -9,7 +9,7 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "H", function()
 	win:setFrame(f)
 end)
 
-configFilePath = 'storedWindows.config'
+configFilePath = 'storedWindows.csv'
 scriptName = 'WindowKeeper'
 function displayMessage(message)
 	hs.notify.new({title=scriptName, informativeText=message}):send()
