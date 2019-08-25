@@ -99,7 +99,6 @@ function restoreWindows()
 	windows = getWindowsOnAllSpaces()
  	for k, line in pairs(linesWithoutFirstLine) do
 		id, screenId, title, x, y, w, h = line:match("(.-), (.-), (.-), (.-), (.-), (.-), (%d+)")
-		log.i('parsed window id:' .. id)
 		id = tonumber(id)
 		screenId = tonumber(screenId)
 		x = tonumber(x)
