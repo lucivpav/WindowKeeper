@@ -126,13 +126,30 @@ function restoreWindows()
 	displayMessage("Windows restored")
 end
 
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "R", restoreWindows)
+function restoreWindowsManually()
+	f, error = io.open(configFilePath, "r")
+	if f == nil then
+		displayMessage("Nothing to restore")
+	else
+		restoreWindows()
+	end
+end
+
+function restoreWindowsAutomatically()
+	f, error = io.open(configFilePath, "r")
+	if f == nil then
+		return
+	end
+	restoreWindows()
+end
+
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "R", restoreWindowsManually)
 
 function screenCallback()
 	currentNumberOfScreens = getNumberOfScreens()
 	if nScreens < currentNumberOfScreens then
 		-- monitor(s) connected
-		restoreWindows()
+		restoreWindowsAutomatically()
 		storeTimer:start()
 	end
 
