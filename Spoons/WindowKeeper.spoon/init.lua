@@ -165,7 +165,7 @@ function screenCallback()
 	end
 
 	nScreens = currentNumberOfScreens
-	log.i("Screen change detected")
+	log.i("Screen change detected (" .. nScreens .. ' screen(s) connected)')
 end
 
 if automaticStoreRestore then
@@ -173,7 +173,9 @@ if automaticStoreRestore then
 	screenWatcher:start()
 
 	storeTimer = hs.timer.new(storeEverySeconds, storeWindows)
-	storeTimer:start()
+	if nScreens > 1 then
+		storeTimer:start()
+	end
 end
 
 return obj
