@@ -5,6 +5,8 @@ obj.name = scriptName
 
 spaces = require("hs._asm.undocumented.spaces")
 
+log = hs.logger.new(scriptName, 'info')
+
 function displayMessage(message)
 	hs.notify.new({title=scriptName, informativeText=message}):send()
 end
@@ -13,14 +15,21 @@ function getNumberOfScreens()
 	return #hs.screen.allScreens()
 end
 
+function getScreenIds()
+	local screenIds = {}
+	for _, screen in pairs(hs.screen.allScreens()) do
+		screenIds[#screenIds+1] = screen:id()
+	end
+	return screenIds
+end
+
 configFilePath = 'Spoons/' .. scriptName .. '.spoon/storedWindows.csv'
 separator = ', '
 escapedSeparator = '; '
 nScreens = getNumberOfScreens()
+screenIds = getScreenIds()
 storeEverySeconds = 30
 automaticStoreRestore = true
-
-log = hs.logger.new(scriptName, 'info')
 
 function getSpaceIds()
 	spacesLayout = spaces.layout()
@@ -95,20 +104,61 @@ function getWindow(windows, id)
 	return nil
 end
 
-function restoreWindows()
-	lines = getLines(configFilePath)
-	linesWithoutFirstLine = {}
+function valueInTable(table, value)
+	for _, tableValue in pairs(table) do
+		if tableValue == value then
+			return true
+		end
+	end
+	return false
+end
+
+function getNewScreenIds()
+	local newScreenIds = {}
+	for _, screenId in pairs(getScreenIds()) do
+		if not valueInTable(screenIds, screenId) then
+			newScreenIds[#newScreenIds+1] = screenId
+		end
+	end
+	return newScreenIds
+end
+
+function parseLine(line)
+	local id, screenId, title, x, y, w, h = line:match("(.-), (.-), (.-), (.-), (.-), (.-), (%d+)")
+	local id = tonumber(id)
+	local screenId = tonumber(screenId)
+	local x = tonumber(x)
+	local y = tonumber(y)
+	local w = tonumber(w)
+	return id, screenId, title, x, y, w, h
+end
+
+function getConfigLinesWithoutFirstLine()
+	local lines = getLines(configFilePath)
+	local linesWithoutFirstLine = {}
 	for i = 2, #lines do
 		linesWithoutFirstLine[#linesWithoutFirstLine+1] = lines[i]
 	end
+	return linesWithoutFirstLine
+end
+
+function isRestoreWindowsMeaningful()
+	local lines = getConfigLinesWithoutFirstLine()
+	for _, newScreenId in pairs(getNewScreenIds()) do
+		for _, line in pairs(lines) do
+			local _, screenId = parseLine(line)
+			if screenId == newScreenId then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+function restoreWindows()
 	windows = getWindowsOnAllSpaces()
- 	for k, line in pairs(linesWithoutFirstLine) do
-		id, screenId, title, x, y, w, h = line:match("(.-), (.-), (.-), (.-), (.-), (.-), (%d+)")
-		id = tonumber(id)
-		screenId = tonumber(screenId)
-		x = tonumber(x)
-		y = tonumber(y)
-		w = tonumber(w)
+ 	for k, line in pairs(getConfigLinesWithoutFirstLine()) do
+		id, screenId, title, x, y, w, h = parseLine(line)
 		window = getWindow(windows, id)
 		screen = hs.screen.find(screenId)
 		if window == nil then
@@ -120,7 +170,6 @@ function restoreWindows()
 			goto continue
 		end
 		frame = window:frame()
-
 		frame.x = x
 		frame.y = y
 		frame.w = w
@@ -146,6 +195,11 @@ function restoreWindowsAutomatically()
 	if f == nil then
 		return
 	end
+
+	if not isRestoreWindowsMeaningful() then
+		return
+	end
+
 	restoreWindows()
 end
 
@@ -166,6 +220,7 @@ function screenCallback()
 	end
 
 	nScreens = currentNumberOfScreens
+	screenIds = getScreenIds()
 	log.i("Screen change detected (" .. nScreens .. ' screen(s) connected)')
 end
 
