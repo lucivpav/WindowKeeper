@@ -26,3 +26,6 @@ For instance, imagine that you are using your MacBook at home, with two external
 
 ## Requirements
 * macOS
+
+## License
+MIT
