@@ -13,7 +13,7 @@ function getNumberOfScreens()
 	return #hs.screen.allScreens()
 end
 
-configFilePath = 'storedWindows.csv'
+configFilePath = 'Spoons/' .. scriptName .. '.spoon/storedWindows.csv'
 separator = ', '
 escapedSeparator = '; '
 nScreens = getNumberOfScreens()
@@ -112,14 +112,15 @@ function restoreWindows()
 		window = getWindow(windows, id)
 		screen = hs.screen.find(screenId)
 		if window == nil then
-			log.w('window is nil, id: ' .. id)
+			log.w('window is nil, window id: ' .. id)
 			goto continue
 		end
 		if screen == nil then
-			log.w('screen is nil, id: ' .. id)
+			log.w('screen is nil, window id: ' .. id)
 			goto continue
 		end
 		frame = window:frame()
+
 		frame.x = x
 		frame.y = y
 		frame.w = w
