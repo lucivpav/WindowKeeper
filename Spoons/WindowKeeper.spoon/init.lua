@@ -81,6 +81,9 @@ end
 
 function manuallyStoreWindows()
 	storeWindows()
+	if automaticStoreRestore and nScreens > 1 then
+		storeTimer:start()
+	end
 	displayMessage("Windows stored")
 end
 
